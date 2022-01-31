@@ -17,9 +17,6 @@ func (this *Router) recovery(request *Request, next pipeline.Pipe) (result inter
 			result = nil
 		}
 	}()
-
-	// 触发钩子
-	this.events.Dispatch(&RequestBefore{request})
 	return next(request)
 }
 

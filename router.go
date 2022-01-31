@@ -146,6 +146,9 @@ func (this *Router) mountRoutes(routes []contracts.Route, middlewares ...contrac
 					this.events.Dispatch(&RequestAfter{request})
 				}()
 
+				// 触发钩子
+				this.events.Dispatch(&RequestBefore{request})
+
 				result := pipeline.Static(this.app).SendStatic(request).
 					ThroughStatic(
 						this.middlewares...,
@@ -156,6 +159,7 @@ func (this *Router) mountRoutes(routes []contracts.Route, middlewares ...contrac
 					ThenStatic(routeInstance.Handler())
 
 				this.events.Dispatch(&ResponseBefore{request})
+
 				HandleResponse(result, request)
 
 				return nil

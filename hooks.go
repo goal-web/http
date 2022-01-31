@@ -34,7 +34,7 @@ type ResponseBefore struct {
 }
 
 func (this *ResponseBefore) Event() string {
-	return "REQUEST_AFTER"
+	return "RESPONSE_BEFORE"
 }
 
 func (this *ResponseBefore) Request() contracts.HttpRequest {

@@ -4,6 +4,8 @@ github.com/goal-web/container v0.1.4 h1:nCdlzRYJGfkNNAsXZQ5TElrwr7P01oIM5tS75KAq
 github.com/goal-web/container v0.1.4/go.mod h1:xbOKGHxV8Pg4IPTVDEEVQ21YZ2Fr2u7sjMUSTVmh05A=
 github.com/goal-web/contracts v0.1.24 h1:iicf3O/dwQf6dZSEXjnM7tb5euxWjQk1CPcAzDfqfIM=
 github.com/goal-web/contracts v0.1.24/go.mod h1:lKHynU2Kgk6xyxL4afOJM4TO1kSa3RrCJ2bm5RtFMBw=
+github.com/goal-web/contracts v0.1.25 h1:83Wgb2qGuTCoDjymZDtMSpp3pDJSZoxp2y2DMDL+kkI=
+github.com/goal-web/contracts v0.1.25/go.mod h1:lKHynU2Kgk6xyxL4afOJM4TO1kSa3RrCJ2bm5RtFMBw=
 github.com/goal-web/pipeline v0.1.5 h1:lmVjU2HHWglvp6wtpU2J6M+2YDiCJJsPu07YFZYmDO4=
 github.com/goal-web/pipeline v0.1.5/go.mod h1:W4DFIzdiRvfEPQaK91HtQgp9oD8ywlj5ehDwRXE0e0g=
 github.com/goal-web/supports v0.1.12 h1:upnHi9tn+kartpXPlBdAV8xXR8T+tn0Grt+oCJGD0Mc=
