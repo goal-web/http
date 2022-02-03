@@ -84,7 +84,7 @@ func (res Response) Status() int {
 	return res.status
 }
 
-func (res Response) Response(ctx contracts.Context) error {
+func (res Response) Response(ctx contracts.HttpContext) error {
 	if res.Json != nil {
 		return ctx.JSON(res.Status(), res.Json)
 	}

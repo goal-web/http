@@ -4,7 +4,7 @@ go 1.17
 
 require (
 	github.com/goal-web/container v0.1.4 // indirect
-	github.com/goal-web/contracts v0.1.25 // indirect
+	github.com/goal-web/contracts v0.1.27 // indirect
 	github.com/goal-web/pipeline v0.1.5 // indirect
 	github.com/goal-web/supports v0.1.12 // indirect
 	github.com/labstack/echo/v4 v4.6.3 // indirect
