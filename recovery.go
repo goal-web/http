@@ -2,11 +2,10 @@ package http
 
 import (
 	"github.com/goal-web/contracts"
-	"github.com/goal-web/pipeline"
 	"github.com/goal-web/supports/exceptions"
 )
 
-func (this *Router) recovery(request *Request, next pipeline.Pipe) (result interface{}) {
+func (this *Router) recovery(request *Request, next contracts.Pipe) (result interface{}) {
 	defer func() {
 		if panicValue := recover(); panicValue != nil {
 			if res := this.errHandler(panicValue, request); res != nil { // 异常处理器返回的响应优先
