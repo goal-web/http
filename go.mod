@@ -3,11 +3,15 @@ module github.com/goal-web/http
 go 1.17
 
 require (
-	github.com/goal-web/container v0.1.4 // indirect
-	github.com/goal-web/contracts v0.1.27 // indirect
-	github.com/goal-web/pipeline v0.1.5 // indirect
-	github.com/goal-web/supports v0.1.12 // indirect
-	github.com/labstack/echo/v4 v4.6.3 // indirect
+	github.com/goal-web/container v0.1.4
+	github.com/goal-web/contracts v0.1.36
+	github.com/goal-web/pipeline v0.1.6
+	github.com/goal-web/supports v0.1.12
+	github.com/labstack/echo/v4 v4.6.3
+)
+
+require (
+	github.com/apex/log v1.9.0 // indirect
 	github.com/labstack/gommon v0.3.1 // indirect
 	github.com/mattn/go-colorable v0.1.11 // indirect
 	github.com/mattn/go-isatty v0.0.14 // indirect
