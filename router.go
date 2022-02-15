@@ -149,14 +149,25 @@ func (this *Router) mountRoutes(routes []contracts.Route, middlewares ...contrac
 				// 触发钩子
 				this.events.Dispatch(&RequestBefore{request})
 
-				result := pipeline.Static(this.app).SendStatic(request).
-					ThroughStatic(
-						this.middlewares...,
-					).
-					ThroughStatic(
-						append(middlewares, routeInstance.Middlewares()...)...,
-					).
-					ThenStatic(routeInstance.Handler())
+				pipes := append(this.middlewares, middlewares...)
+				pipes = append(pipes, routeInstance.Middlewares()...)
+
+				var result interface{}
+				if len(pipes) == 0 {
+					results := this.app.StaticCall(routeInstance.Handler(), request)
+					if len(results) > 0 {
+						result = results[0]
+					}
+				} else {
+					result = pipeline.Static(this.app).SendStatic(request).
+						ThroughStatic(
+							this.middlewares...,
+						).
+						ThroughStatic(
+							append(middlewares, routeInstance.Middlewares()...)...,
+						).
+						ThenStatic(routeInstance.Handler())
+				}
 
 				this.events.Dispatch(&ResponseBefore{request})
 
