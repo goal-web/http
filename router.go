@@ -5,6 +5,7 @@ import (
 	"github.com/goal-web/container"
 	"github.com/goal-web/contracts"
 	"github.com/goal-web/pipeline"
+	"github.com/goal-web/supports/exceptions"
 	"github.com/labstack/echo/v4"
 	"strings"
 )
@@ -129,7 +130,7 @@ func (this *Router) Start(address string) error {
 	}
 
 	this.echo.HTTPErrorHandler = func(err error, context echo.Context) {
-		this.app.StaticCall(exceptionHandler, Exception{error: err, Request: NewRequest(context)})
+		this.app.StaticCall(exceptionHandler, Exception{Exception: exceptions.WithError(err, nil), Request: NewRequest(context)})
 	}
 	this.echo.Debug = this.app.Debug()
 

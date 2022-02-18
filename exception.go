@@ -5,7 +5,7 @@ import (
 )
 
 type Exception struct {
-	error
+	contracts.Exception
 	Request contracts.HttpRequest
 }
 

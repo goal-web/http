@@ -26,8 +26,8 @@ func (this *Router) errHandler(err interface{}, request contracts.HttpRequest) (
 		httpException = rawErr
 	default:
 		httpException = Exception{
-			error:   exceptions.ResolveException(err),
-			Request: request,
+			Exception: exceptions.ResolveException(err),
+			Request:   request,
 		}
 	}
 
