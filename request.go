@@ -4,7 +4,6 @@ import (
 	"github.com/goal-web/contracts"
 	"github.com/goal-web/supports/logs"
 	"github.com/goal-web/supports/utils"
-	"github.com/labstack/echo/v4"
 	"net/http"
 )
 
@@ -111,6 +110,8 @@ func (this *Request) Fields() contracts.Fields {
 			}
 		}
 	}
+
+	this.fields = data
 
 	return data
 }
