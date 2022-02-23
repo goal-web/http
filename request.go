@@ -2,8 +2,10 @@ package http
 
 import (
 	"github.com/goal-web/contracts"
+	"github.com/goal-web/supports/logs"
 	"github.com/goal-web/supports/utils"
 	"github.com/labstack/echo/v4"
+	"net/http"
 )
 
 type Request struct {
@@ -66,7 +68,13 @@ func (this *Request) Fields() contracts.Fields {
 	if this.fields != nil {
 		return this.fields
 	}
-	data := make(contracts.Fields)
+	var data = make(contracts.Fields)
+	if this.Request().Method == http.MethodPost {
+		var bindErr = this.Context.Bind(&data)
+		if bindErr != nil {
+			logs.WithError(bindErr).Debug("http.Request.Fields: bind fields failed")
+		}
+	}
 
 	for key, query := range this.QueryParams() {
 		if len(query) == 1 {
