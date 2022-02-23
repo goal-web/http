@@ -2,66 +2,45 @@ package http
 
 import (
 	"github.com/goal-web/contracts"
+	"github.com/goal-web/supports"
 	"github.com/goal-web/supports/logs"
-	"github.com/goal-web/supports/utils"
+	"github.com/goal-web/validation"
 	"github.com/labstack/echo/v4"
-	"net/http"
+	"strings"
 )
 
 type Request struct {
+	supports.BaseFields
 	echo.Context
 	fields contracts.Fields
 }
 
 func NewRequest(ctx echo.Context) contracts.HttpRequest {
-	return &Request{
-		Context: ctx,
-		fields:  nil,
+	var request = &Request{
+		Context:    ctx,
+		fields:     nil,
+		BaseFields: supports.BaseFields{},
 	}
-}
 
-func (this *Request) GetString(key string) string {
-	return utils.GetStringField(this.Fields(), key)
-}
+	request.BaseFields.FieldsProvider = request
+	request.BaseFields.Getter = request.Context.Get
 
-func (this *Request) GetInt64(key string) int64 {
-	return utils.GetInt64Field(this.Fields(), key)
-}
-
-func (this *Request) GetInt(key string) int {
-	return utils.GetIntField(this.Fields(), key)
-}
-
-func (this *Request) GetFloat64(key string) float64 {
-	return utils.GetFloat64Field(this.Fields(), key)
-}
-
-func (this *Request) GetFloat(key string) float32 {
-	return utils.GetFloatField(this.Fields(), key)
-}
-
-func (this *Request) GetBool(key string) bool {
-	return utils.GetBoolField(this.Fields(), key)
-}
-
-func (this *Request) GetFields(key string) contracts.Fields {
-	if field, isTypeRight := this.Fields()[key].(contracts.Fields); isTypeRight {
-		return field
-	}
-	return nil
+	return request
 }
 
 func (this *Request) Get(key string) (value interface{}) {
 	if value = this.Context.Get(key); value != nil {
 		return value
 	}
-	if value = utils.StringOr(
-		this.Param(key),
-		this.QueryParams().Get(key),
-	); value != "" {
-		return value
+	return this.Fields()[key]
+}
+
+func (this *Request) Validate(v interface{}) error {
+	if err := this.Bind(v); err != nil {
+		return err
 	}
-	return this.FormValue(key)
+
+	return validation.Struct(v)
 }
 
 func (this *Request) Fields() contracts.Fields {
@@ -69,7 +48,7 @@ func (this *Request) Fields() contracts.Fields {
 		return this.fields
 	}
 	var data = make(contracts.Fields)
-	if this.Request().Method == http.MethodPost {
+	if strings.Contains(this.Request().Header.Get("Content-Type"), "json") {
 		var bindErr = this.Context.Bind(&data)
 		if bindErr != nil {
 			logs.WithError(bindErr).Debug("http.Request.Fields: bind fields failed")
