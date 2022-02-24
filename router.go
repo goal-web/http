@@ -120,6 +120,14 @@ func (this *Router) Add(method interface{}, path string, handler interface{}, mi
 	})
 }
 
+func (this *Router) mountGroup(group contracts.RouteGroup) {
+	this.mountRoutes(group.Routes(), group.Middlewares()...)
+
+	for _, routeGroup := range group.Groups() {
+		this.mountGroup(routeGroup)
+	}
+}
+
 // Start 启动 httpserver
 func (this *Router) Start(address string) error {
 

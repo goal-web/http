@@ -4,7 +4,7 @@ go 1.17
 
 require (
 	github.com/goal-web/container v0.1.5
-	github.com/goal-web/contracts v0.1.51
+	github.com/goal-web/contracts v0.1.52
 	github.com/goal-web/pipeline v0.1.6
 	github.com/goal-web/supports v0.1.22
 	github.com/goal-web/validation v0.1.0

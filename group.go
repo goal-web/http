@@ -36,7 +36,7 @@ func (group *group) AddRoute(route contracts.Route) contracts.RouteGroup {
 
 // Group 添加一个子组
 func (group *group) Group(prefix string, middlewares ...interface{}) contracts.RouteGroup {
-	groupInstance := NewGroup(prefix, middlewares...)
+	var groupInstance = NewGroup(group.prefix+prefix, middlewares...)
 
 	group.groups = append(group.groups, groupInstance)
 
@@ -94,6 +94,10 @@ func (group *group) Options(path string, handler interface{}, middlewares ...int
 
 func (group *group) Middlewares() []contracts.MagicalFunc {
 	return group.middlewares
+}
+
+func (group *group) Groups() []contracts.RouteGroup {
+	return group.groups
 }
 
 func (group *group) Routes() []contracts.Route {
