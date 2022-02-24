@@ -134,7 +134,7 @@ func (this *Router) Start(address string) error {
 	this.mountRoutes(this.routes)
 
 	for _, routeGroup := range this.groups {
-		this.mountRoutes(routeGroup.Routes(), routeGroup.Middlewares()...)
+		this.mountGroup(routeGroup)
 	}
 
 	this.echo.HTTPErrorHandler = func(err error, context echo.Context) {
