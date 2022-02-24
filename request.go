@@ -23,13 +23,32 @@ func NewRequest(ctx echo.Context) contracts.HttpRequest {
 	}
 
 	request.BaseFields.FieldsProvider = request
-	request.BaseFields.Getter = request.Context.Get
+	request.BaseFields.Getter = request.get
 
 	return request
 }
 
 func (this *Request) Get(key string) (value interface{}) {
-	if value = this.Context.Get(key); value != nil {
+	if value = this.Context.Get(key); value != nil && value != "" {
+		return value
+	}
+	if value = this.Context.QueryParam(key); value != nil && value != "" {
+		return value
+	}
+	if value = this.Context.FormValue(key); value != nil && value != "" {
+		return value
+	}
+	if value = this.Context.Param(key); value != nil && value != "" {
+		return value
+	}
+	if file, err := this.Context.FormFile(key); err == nil && file != nil {
+		return file
+	}
+	return
+}
+
+func (this *Request) get(key string) (value interface{}) {
+	if value = this.Get(key); value != nil && value != "" {
 		return value
 	}
 	return this.Fields()[key]
