@@ -138,7 +138,11 @@ func (this *Router) Start(address string) error {
 	}
 
 	this.echo.HTTPErrorHandler = func(err error, context echo.Context) {
-		this.app.StaticCall(exceptionHandler, Exception{Exception: exceptions.WithError(err, nil), Request: NewRequest(context)})
+		if result := this.app.StaticCall(exceptionHandler, Exception{Exception: exceptions.WithError(err, contracts.Fields{
+			"status": context.Response().Status,
+		}), Request: NewRequest(context)})[0]; result != nil {
+			HandleResponse(result, NewRequest(context))
+		}
 	}
 	this.echo.Debug = this.app.Debug()
 
