@@ -96,6 +96,8 @@ func (this *Router) Use(middlewares ...interface{}) {
 	for _, middleware := range middlewares {
 		if magicalFunc, ok := middleware.(contracts.MagicalFunc); ok {
 			this.middlewares = append(this.middlewares, magicalFunc)
+		} else if echoMiddleware, isEchoFunc := middleware.(echo.MiddlewareFunc); isEchoFunc {
+			this.echo.Use(echoMiddleware)
 		} else {
 			this.middlewares = append(this.middlewares, container.NewMagicalFunc(middleware))
 		}
