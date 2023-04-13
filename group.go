@@ -18,7 +18,7 @@ type group struct {
 	groups      []contracts.RouteGroup
 }
 
-func NewGroup(prefix string, middlewares ...interface{}) contracts.RouteGroup {
+func NewGroup(prefix string, middlewares ...any) contracts.RouteGroup {
 	return &group{
 		prefix:      prefix,
 		routes:      make([]contracts.Route, 0),
@@ -35,7 +35,7 @@ func (group *group) AddRoute(route contracts.Route) contracts.RouteGroup {
 }
 
 // Group 添加一个子组
-func (group *group) Group(prefix string, middlewares ...interface{}) contracts.RouteGroup {
+func (group *group) Group(prefix string, middlewares ...any) contracts.RouteGroup {
 	var groupInstance = NewGroup(group.prefix+prefix, middlewares...)
 
 	group.groups = append(group.groups, groupInstance)
@@ -44,7 +44,7 @@ func (group *group) Group(prefix string, middlewares ...interface{}) contracts.R
 }
 
 // Add 添加路由，method 只允许字符串或者字符串数组
-func (group *group) Add(method interface{}, path string, handler interface{}, middlewares ...interface{}) contracts.RouteGroup {
+func (group *group) Add(method any, path string, handler any, middlewares ...any) contracts.RouteGroup {
 	methods := make([]string, 0)
 	switch r := method.(type) {
 	case string:
@@ -64,31 +64,31 @@ func (group *group) Add(method interface{}, path string, handler interface{}, mi
 	return group
 }
 
-func (group *group) Get(path string, handler interface{}, middlewares ...interface{}) contracts.RouteGroup {
+func (group *group) Get(path string, handler any, middlewares ...any) contracts.RouteGroup {
 	return group.Add(echo.GET, path, handler, middlewares...)
 }
 
-func (group *group) Post(path string, handler interface{}, middlewares ...interface{}) contracts.RouteGroup {
+func (group *group) Post(path string, handler any, middlewares ...any) contracts.RouteGroup {
 	return group.Add(echo.POST, path, handler, middlewares...)
 }
 
-func (group *group) Delete(path string, handler interface{}, middlewares ...interface{}) contracts.RouteGroup {
+func (group *group) Delete(path string, handler any, middlewares ...any) contracts.RouteGroup {
 	return group.Add(echo.DELETE, path, handler, middlewares...)
 }
 
-func (group *group) Put(path string, handler interface{}, middlewares ...interface{}) contracts.RouteGroup {
+func (group *group) Put(path string, handler any, middlewares ...any) contracts.RouteGroup {
 	return group.Add(echo.PUT, path, handler, middlewares...)
 }
 
-func (group *group) Trace(path string, handler interface{}, middlewares ...interface{}) contracts.RouteGroup {
+func (group *group) Trace(path string, handler any, middlewares ...any) contracts.RouteGroup {
 	return group.Add(echo.TRACE, path, handler, middlewares...)
 }
 
-func (group *group) Patch(path string, handler interface{}, middlewares ...interface{}) contracts.RouteGroup {
+func (group *group) Patch(path string, handler any, middlewares ...any) contracts.RouteGroup {
 	return group.Add(echo.PATCH, path, handler, middlewares...)
 }
 
-func (group *group) Options(path string, handler interface{}, middlewares ...interface{}) contracts.RouteGroup {
+func (group *group) Options(path string, handler any, middlewares ...any) contracts.RouteGroup {
 	return group.Add(echo.OPTIONS, path, handler, middlewares...)
 }
 

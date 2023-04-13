@@ -5,7 +5,7 @@ import (
 	"github.com/goal-web/contracts"
 )
 
-func convertToMiddlewares(middlewares ...interface{}) (results []contracts.MagicalFunc) {
+func convertToMiddlewares(middlewares ...any) (results []contracts.MagicalFunc) {
 	for _, middleware := range middlewares {
 		magicalFunc, isMiddleware := middleware.(contracts.MagicalFunc)
 		if !isMiddleware {

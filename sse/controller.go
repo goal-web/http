@@ -4,7 +4,7 @@ import (
 	"github.com/goal-web/contracts"
 )
 
-func Default() interface{} {
+func Default() any {
 	return New(&DefaultController{})
 }
 

@@ -7,7 +7,7 @@ import (
 	"github.com/goal-web/supports/logs"
 )
 
-func New(controller contracts.SseController) interface{} {
+func New(controller contracts.SseController) any {
 	return func(request *http.Request, serializer contracts.Serializer, sse contracts.Sse) error {
 		var fd = sse.GetFd()
 		if err := controller.OnConnect(request, fd); err != nil {
@@ -22,7 +22,7 @@ func New(controller contracts.SseController) interface{} {
 		response.Header().Set("Access-Control-Allow-Origin", "*")
 
 		var (
-			messageChan = make(chan interface{})
+			messageChan = make(chan any)
 			closeChan   = make(chan bool)
 			conn        = NewConnection(messageChan, closeChan, fd)
 		)
@@ -60,7 +60,7 @@ func New(controller contracts.SseController) interface{} {
 	}
 }
 
-func handleMessage(msg interface{}, serializer contracts.Serializer) []byte {
+func handleMessage(msg any, serializer contracts.Serializer) []byte {
 	switch v := msg.(type) {
 	case []byte:
 		return v

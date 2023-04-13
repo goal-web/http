@@ -11,11 +11,15 @@ import (
 type ServiceProvider struct {
 	app contracts.Application
 
-	RouteCollectors []interface{}
+	RouteCollectors []any
 }
 
-func (this *ServiceProvider) Stop() {
-	this.app.Call(func(dispatcher contracts.EventDispatcher, router contracts.Router) {
+func NewService(routes ...any) contracts.ServiceProvider {
+	return &ServiceProvider{RouteCollectors: routes}
+}
+
+func (provider *ServiceProvider) Stop() {
+	provider.app.Call(func(dispatcher contracts.EventDispatcher, router contracts.Router) {
 		if err := router.Close(); err != nil {
 			logs.WithError(err).Info("Router 关闭报错")
 		}
@@ -23,34 +27,35 @@ func (this *ServiceProvider) Stop() {
 	})
 }
 
-func (this *ServiceProvider) Start() error {
-	for _, collector := range this.RouteCollectors {
-		this.app.Call(collector)
+func (provider *ServiceProvider) Start() error {
+	for _, collector := range provider.RouteCollectors {
+		provider.app.Call(collector)
 	}
 
-	err := this.app.Call(func(router contracts.Router, config contracts.Config) error {
+	var err error
+	provider.app.Call(func(router contracts.Router, config contracts.Config) {
 		httpConfig := config.Get("http").(Config)
-		return router.Start(
+		err = router.Start(
 			utils.StringOr(
 				httpConfig.Address,
 				fmt.Sprintf("%s:%s", httpConfig.Host, utils.StringOr(httpConfig.Port, "8000")),
 			),
 		)
-	})[0].(error)
+	})
 
 	if err != nil && err != http.ErrServerClosed {
 		logs.WithError(err).Error("http 服务无法启动")
-		this.app.Stop()
+		go func() { provider.app.Stop() }()
 		return err
 	}
 
 	return nil
 }
 
-func (this *ServiceProvider) Register(app contracts.Application) {
-	this.app = app
+func (provider *ServiceProvider) Register(app contracts.Application) {
+	provider.app = app
 
 	app.Singleton("Router", func() contracts.Router {
-		return New(this.app)
+		return New(provider.app)
 	})
 }

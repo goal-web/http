@@ -43,7 +43,7 @@ func (sse *Sse) Close(fd uint64) error {
 	return ConnectionDontExistsErr
 }
 
-func (sse *Sse) Send(fd uint64, message interface{}) error {
+func (sse *Sse) Send(fd uint64, message any) error {
 	var conn, exists = sse.connections[fd]
 	if exists {
 		return conn.Send(message)

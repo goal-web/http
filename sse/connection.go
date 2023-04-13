@@ -7,11 +7,11 @@ import (
 
 type Connection struct {
 	fd        uint64
-	msgPipe   chan interface{}
+	msgPipe   chan any
 	closePipe chan bool
 }
 
-func NewConnection(pipe chan interface{}, closePipe chan bool, fd uint64) contracts.SseConnection {
+func NewConnection(pipe chan any, closePipe chan bool, fd uint64) contracts.SseConnection {
 	return &Connection{
 		fd:        fd,
 		msgPipe:   pipe,
@@ -28,12 +28,10 @@ func (conn *Connection) Close() error {
 	return nil
 }
 
-func (conn *Connection) Send(msg interface{}) (err error) {
+func (conn *Connection) Send(msg any) (err error) {
 	defer func() {
 		if v := recover(); v != nil {
-			err = Exception{exceptions.WithRecover(v, contracts.Fields{
-				"msg": msg,
-			})}
+			err = Exception{exceptions.WithRecover(v)}
 		}
 	}()
 	conn.msgPipe <- msg

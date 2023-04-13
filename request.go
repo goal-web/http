@@ -16,75 +16,77 @@ type Request struct {
 }
 
 func NewRequest(ctx echo.Context) contracts.HttpRequest {
-	var request = &Request{
-		Context:    ctx,
-		fields:     nil,
-		BaseFields: supports.BaseFields{},
-	}
-
+	var request = &Request{Context: ctx, BaseFields: supports.BaseFields{}}
 	request.BaseFields.FieldsProvider = request
-	request.BaseFields.Getter = request.get
+	request.BaseFields.OptionalGetter = request.Optional
 
 	return request
 }
 
-func (this *Request) Get(key string) (value interface{}) {
-	if value = this.Context.Get(key); value != nil && value != "" {
-		return value
-	}
-	if value = this.Context.QueryParam(key); value != nil && value != "" {
-		return value
-	}
-	if value = this.Context.FormValue(key); value != nil && value != "" {
-		return value
-	}
-	if value = this.Context.Param(key); value != nil && value != "" {
-		return value
-	}
-	if file, err := this.Context.FormFile(key); err == nil && file != nil {
-		return file
-	}
-	return
+func (request *Request) Get(key string) any {
+	return request.Optional(key, nil)
 }
 
-func (this *Request) get(key string) (value interface{}) {
-	if value = this.Get(key); value != nil && value != "" {
+func (request *Request) Optional(key string, defaultValue any) (value any) {
+	if value = request.Context.Get(key); value != nil {
 		return value
 	}
-	return this.Fields()[key]
+	if value = request.Context.Param(key); value != nil && value != "" {
+		return value
+	}
+	if request.Context.QueryParams().Has(key) {
+		return request.Context.QueryParam(key)
+	}
+	form, err := request.Context.MultipartForm()
+	if err != nil {
+		return defaultValue
+	}
+	if files, isFile := form.File[key]; isFile {
+		if len(files) == 1 {
+			return files[0]
+		}
+		return files
+	} else if values, isValue := form.Value[key]; isValue {
+		if len(values) == 1 {
+			return values[0]
+		}
+		return values
+	}
+
+	return defaultValue
 }
 
-func (this *Request) Validate(v interface{}) error {
-	if err := this.Bind(v); err != nil {
+func (request *Request) Validate(v any) error {
+	if err := request.Bind(v); err != nil {
 		return err
 	}
 
 	return validation.Struct(v)
 }
 
-func (this *Request) Fields() contracts.Fields {
-	if this.fields != nil {
-		return this.fields
+func (request *Request) Fields() contracts.Fields {
+	if request.fields != nil {
+		return request.fields
 	}
 	var data = make(contracts.Fields)
-	if strings.Contains(this.Request().Header.Get("Content-Type"), "json") {
-		var bindErr = this.Context.Bind(&data)
+	if strings.Contains(request.Request().Header.Get("Content-Type"), "json") {
+		var bindErr = request.Context.Bind(&data)
 		if bindErr != nil {
 			logs.WithError(bindErr).Debug("http.Request.Fields: bind fields failed")
 		}
 	}
 
-	for key, query := range this.QueryParams() {
+	for key, query := range request.QueryParams() {
 		if len(query) == 1 {
 			data[key] = query[0]
 		} else {
 			data[key] = query
 		}
 	}
-	for _, paramName := range this.ParamNames() {
-		data[paramName] = this.Param(paramName)
+	for _, paramName := range request.ParamNames() {
+		data[paramName] = request.Param(paramName)
 	}
-	if form, existsForm := this.FormParams(); existsForm == nil {
+	if form, existsForm := request.FormParams(); existsForm == nil {
 		for key, values := range form {
 			if len(values) == 1 {
 				data[key] = values[0]
@@ -93,7 +95,7 @@ func (this *Request) Fields() contracts.Fields {
 			}
 		}
 	}
-	if multiForm, existsForm := this.MultipartForm(); existsForm == nil {
+	if multiForm, existsForm := request.MultipartForm(); existsForm == nil {
 		for key, values := range multiForm.Value {
 			if len(values) == 1 {
 				data[key] = values[0]
@@ -110,7 +112,7 @@ func (this *Request) Fields() contracts.Fields {
 		}
 	}
 
-	this.fields = data
+	request.fields = data
 
 	return data
 }

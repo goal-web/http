@@ -7,14 +7,13 @@ import (
 	"github.com/goal-web/pipeline"
 	"github.com/goal-web/supports/exceptions"
 	"github.com/labstack/echo/v4"
-	"strings"
 )
 
 var (
 	MiddlewareError = errors.New("middleware error") // 中间件必须有一个返回值
 
 	// magical middlewares
-	exceptionHandler = container.NewMagicalFunc(func(handler contracts.ExceptionHandler, exception Exception) interface{} {
+	exceptionHandler = container.NewMagicalFunc(func(handler contracts.ExceptionHandler, exception Exception) any {
 		return handler.Handle(exception)
 	})
 )
@@ -45,66 +44,63 @@ type Router struct {
 	middlewares []contracts.MagicalFunc
 }
 
-func (this *Router) Group(prefix string, middlewares ...interface{}) contracts.RouteGroup {
+func (router *Router) Group(prefix string, middlewares ...any) contracts.RouteGroup {
 	groupInstance := NewGroup(prefix, middlewares...)
 
-	this.groups = append(this.groups, groupInstance)
+	router.groups = append(router.groups, groupInstance)
 
 	return groupInstance
 }
 
-func (this *Router) Close() error {
-	return this.echo.Close()
+func (router *Router) Close() error {
+	return router.echo.Close()
 }
 
-func (this *Router) Static(path, directory string) {
-	if strings.HasPrefix(directory, "/") {
-		directory = this.app.Get("path").(string) + "/" + directory
-	}
-	this.echo.Static(path, directory)
+func (router *Router) Static(path, directory string) {
+	router.echo.Static(path, directory)
 }
 
-func (this *Router) Get(path string, handler interface{}, middlewares ...interface{}) {
-	this.Add(echo.GET, path, handler, middlewares...)
+func (router *Router) Get(path string, handler any, middlewares ...any) {
+	router.Add(echo.GET, path, handler, middlewares...)
 }
 
-func (this *Router) Post(path string, handler interface{}, middlewares ...interface{}) {
-	this.Add(echo.POST, path, handler, middlewares...)
+func (router *Router) Post(path string, handler any, middlewares ...any) {
+	router.Add(echo.POST, path, handler, middlewares...)
 }
 
-func (this *Router) Delete(path string, handler interface{}, middlewares ...interface{}) {
-	this.Add(echo.DELETE, path, handler, middlewares...)
+func (router *Router) Delete(path string, handler any, middlewares ...any) {
+	router.Add(echo.DELETE, path, handler, middlewares...)
 }
 
-func (this *Router) Put(path string, handler interface{}, middlewares ...interface{}) {
-	this.Add(echo.PUT, path, handler, middlewares...)
+func (router *Router) Put(path string, handler any, middlewares ...any) {
+	router.Add(echo.PUT, path, handler, middlewares...)
 }
 
-func (this *Router) Patch(path string, handler interface{}, middlewares ...interface{}) {
-	this.Add(echo.PATCH, path, handler, middlewares...)
+func (router *Router) Patch(path string, handler any, middlewares ...any) {
+	router.Add(echo.PATCH, path, handler, middlewares...)
 }
 
-func (this *Router) Options(path string, handler interface{}, middlewares ...interface{}) {
-	this.Add(echo.OPTIONS, path, handler, middlewares...)
+func (router *Router) Options(path string, handler any, middlewares ...any) {
+	router.Add(echo.OPTIONS, path, handler, middlewares...)
 }
 
-func (this *Router) Trace(path string, handler interface{}, middlewares ...interface{}) {
-	this.Add(echo.TRACE, path, handler, middlewares...)
+func (router *Router) Trace(path string, handler any, middlewares ...any) {
+	router.Add(echo.TRACE, path, handler, middlewares...)
 }
 
-func (this *Router) Use(middlewares ...interface{}) {
+func (router *Router) Use(middlewares ...any) {
 	for _, middleware := range middlewares {
 		if magicalFunc, ok := middleware.(contracts.MagicalFunc); ok {
-			this.middlewares = append(this.middlewares, magicalFunc)
+			router.middlewares = append(router.middlewares, magicalFunc)
 		} else if echoMiddleware, isEchoFunc := middleware.(echo.MiddlewareFunc); isEchoFunc {
-			this.echo.Use(echoMiddleware)
+			router.echo.Use(echoMiddleware)
 		} else {
-			this.middlewares = append(this.middlewares, container.NewMagicalFunc(middleware))
+			router.middlewares = append(router.middlewares, container.NewMagicalFunc(middleware))
 		}
 	}
 }
 
-func (this *Router) Add(method interface{}, path string, handler interface{}, middlewares ...interface{}) {
+func (router *Router) Add(method any, path string, handler any, middlewares ...any) {
 	methods := make([]string, 0)
 	switch v := method.(type) {
 	case string:
@@ -114,7 +110,7 @@ func (this *Router) Add(method interface{}, path string, handler interface{}, mi
 	default:
 		panic(errors.New("method 只能接收 string 或者 []string"))
 	}
-	this.routes = append(this.routes, &route{
+	router.routes = append(router.routes, &route{
 		method:      methods,
 		path:        path,
 		middlewares: convertToMiddlewares(middlewares...),
@@ -122,61 +118,59 @@ func (this *Router) Add(method interface{}, path string, handler interface{}, mi
 	})
 }
 
-func (this *Router) mountGroup(group contracts.RouteGroup) {
-	this.mountRoutes(group.Routes(), group.Middlewares()...)
+func (router *Router) mountGroup(group contracts.RouteGroup) {
+	router.mountRoutes(group.Routes(), group.Middlewares()...)
 
 	for _, routeGroup := range group.Groups() {
-		this.mountGroup(routeGroup)
+		router.mountGroup(routeGroup)
 	}
 }
 
 // Start 启动 httpserver
-func (this *Router) Start(address string) error {
+func (router *Router) Start(address string) error {
 
-	this.mountRoutes(this.routes)
+	router.mountRoutes(router.routes)
 
-	for _, routeGroup := range this.groups {
-		this.mountGroup(routeGroup)
+	for _, routeGroup := range router.groups {
+		router.mountGroup(routeGroup)
 	}
 
-	this.echo.HTTPErrorHandler = func(err error, context echo.Context) {
-		if result := this.app.StaticCall(exceptionHandler, Exception{Exception: exceptions.WithError(err, contracts.Fields{
-			"status": context.Response().Status,
-		}), Request: NewRequest(context)})[0]; result != nil {
+	router.echo.HTTPErrorHandler = func(err error, context echo.Context) {
+		if result := router.app.StaticCall(exceptionHandler, Exception{Exception: exceptions.WithError(err), Request: NewRequest(context)})[0]; result != nil {
 			HandleResponse(result, NewRequest(context))
 		}
 	}
-	this.echo.Debug = this.app.Debug()
+	router.echo.Debug = router.app.Debug()
 
-	return this.echo.Start(address)
+	return router.echo.Start(address)
 }
 
 // mountRoutes 装配路由
-func (this *Router) mountRoutes(routes []contracts.Route, middlewares ...contracts.MagicalFunc) {
+func (router *Router) mountRoutes(routes []contracts.Route, middlewares ...contracts.MagicalFunc) {
 	for _, routeItem := range routes {
 		(func(routeInstance contracts.Route) {
-			this.echo.Match(routeInstance.Method(), routeInstance.Path(), func(context echo.Context) error {
+			router.echo.Match(routeInstance.Method(), routeInstance.Path(), func(context echo.Context) error {
 				request := NewRequest(context)
 				defer func() {
-					this.events.Dispatch(&RequestAfter{request})
+					router.events.Dispatch(&RequestAfter{request})
 				}()
 
 				// 触发钩子
-				this.events.Dispatch(&RequestBefore{request})
+				router.events.Dispatch(&RequestBefore{request})
 
-				pipes := append(this.middlewares, middlewares...)
+				pipes := append(router.middlewares, middlewares...)
 				pipes = append(pipes, routeInstance.Middlewares()...)
 
-				var result interface{}
+				var result any
 				if len(pipes) == 0 {
-					results := this.app.StaticCall(routeInstance.Handler(), request)
+					results := router.app.StaticCall(routeInstance.Handler(), request)
 					if len(results) > 0 {
 						result = results[0]
 					}
 				} else {
-					result = pipeline.Static(this.app).SendStatic(request).
+					result = pipeline.Static(router.app).SendStatic(request).
 						ThroughStatic(
-							this.middlewares...,
+							router.middlewares...,
 						).
 						ThroughStatic(
 							append(middlewares, routeInstance.Middlewares()...)...,
@@ -184,7 +178,7 @@ func (this *Router) mountRoutes(routes []contracts.Route, middlewares ...contrac
 						ThenStatic(routeInstance.Handler())
 				}
 
-				this.events.Dispatch(&ResponseBefore{request})
+				router.events.Dispatch(&ResponseBefore{request})
 
 				HandleResponse(result, request)
 

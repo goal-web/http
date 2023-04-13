@@ -15,7 +15,7 @@ var (
 )
 
 // HandleResponse 处理控制器函数的响应
-func HandleResponse(response interface{}, ctx contracts.HttpRequest) {
+func HandleResponse(response any, ctx contracts.HttpRequest) {
 	if response == nil {
 		return
 	}
@@ -40,7 +40,7 @@ func HandleResponse(response interface{}, ctx contracts.HttpRequest) {
 
 type Response struct {
 	status   int
-	Json     interface{}
+	Json     any
 	String   string
 	FilePath string
 	File     *os.File
@@ -57,7 +57,7 @@ func StringResponse(str string, code ...int) contracts.HttpResponse {
 	}
 }
 
-func JsonResponse(json interface{}, code ...int) contracts.HttpResponse {
+func JsonResponse(json any, code ...int) contracts.HttpResponse {
 	status := 200
 	if len(code) > 0 {
 		status = code[0]
@@ -69,7 +69,7 @@ func JsonResponse(json interface{}, code ...int) contracts.HttpResponse {
 }
 
 // FileResponse 响应文件
-func FileResponse(file interface{}) contracts.HttpResponse {
+func FileResponse(file any) contracts.HttpResponse {
 	switch f := file.(type) {
 	case *os.File:
 		return Response{File: f}

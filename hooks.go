@@ -6,41 +6,41 @@ type RequestBefore struct {
 	request contracts.HttpRequest
 }
 
-func (this *RequestBefore) Event() string {
+func (event *RequestBefore) Event() string {
 	return "REQUEST_BEFORE"
 }
 
-func (this *RequestBefore) Sync() bool {
+func (event *RequestBefore) Sync() bool {
 	return true
 }
-func (this *RequestBefore) Request() contracts.HttpRequest {
-	return this.request
+func (event *RequestBefore) Request() contracts.HttpRequest {
+	return event.request
 }
 
 type RequestAfter struct {
 	request contracts.HttpRequest
 }
 
-func (this *RequestAfter) Event() string {
+func (event *RequestAfter) Event() string {
 	return "REQUEST_AFTER"
 }
 
-func (this *RequestAfter) Request() contracts.HttpRequest {
-	return this.request
+func (event *RequestAfter) Request() contracts.HttpRequest {
+	return event.request
 }
 
 type ResponseBefore struct {
 	request contracts.HttpRequest
 }
 
-func (this *ResponseBefore) Event() string {
+func (events *ResponseBefore) Event() string {
 	return "RESPONSE_BEFORE"
 }
 
-func (this *ResponseBefore) Request() contracts.HttpRequest {
-	return this.request
+func (events *ResponseBefore) Request() contracts.HttpRequest {
+	return events.request
 }
 
-func (this *ResponseBefore) Sync() bool {
+func (events *ResponseBefore) Sync() bool {
 	return true
 }
