@@ -35,6 +35,11 @@ func (provider *ServiceProvider) Start() error {
 	var err error
 	provider.app.Call(func(router contracts.Router, config contracts.Config) {
 		httpConfig := config.Get("http").(Config)
+
+		for prefix, directory := range httpConfig.StaticDirectories {
+			router.Static(prefix, directory)
+		}
+
 		err = router.Start(
 			utils.StringOr(
 				httpConfig.Address,
