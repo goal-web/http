@@ -26,6 +26,8 @@ github.com/goal-web/contracts v0.2.0 h1:CAk+mLD2dC//DiCV9TAUSN1zopWSrPZ8+/vCxs+c
 github.com/goal-web/contracts v0.2.0/go.mod h1:33koNCIiQ7GzBmYycynenVtv5E+Jq7lWGZ8vKi5uXJQ=
 github.com/goal-web/pipeline v0.2.0 h1:URqTEuhcKsQ+s52QTKWpd1dsxGSPwTkW/yIat7qLMLA=
 github.com/goal-web/pipeline v0.2.0/go.mod h1:od6LBQPkW94uCh4eeu8zVJy3Ky/ekTmJiEEoPBRdzG0=
+github.com/goal-web/routing v0.0.0-20230501162547-1fb838ef8fbe h1:OlM2ph0ffmTxz8bOOdSvC+iKHaPNNLpigm/u8s8W8FY=
+github.com/goal-web/routing v0.0.0-20230501162547-1fb838ef8fbe/go.mod h1:B90xb6QeMCsaL+KkM3QCOZlhZFJY9CW2WPY/qULi794=
 github.com/goal-web/supports v0.2.0 h1:I1MuDcyOSo9JJprXwvyPeV99kn/Zs/VQEM7dDsv6VyY=
 github.com/goal-web/supports v0.2.0/go.mod h1:OZFq18eCd+9atA7re2gbNMZ2zWGdpuSS8WmCRsqhGm4=
 github.com/goal-web/validation v0.2.0 h1:usRoRzdjQdC9yXLRBjk5XYTPKzWwZXJcND9uy8HqLro=

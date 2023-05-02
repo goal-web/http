@@ -3,12 +3,11 @@ module github.com/goal-web/http
 go 1.20
 
 require (
-	github.com/goal-web/container v0.2.0
 	github.com/goal-web/contracts v0.2.0
 	github.com/goal-web/pipeline v0.2.0
+	github.com/goal-web/routing v0.0.0-20230501162547-1fb838ef8fbe
 	github.com/goal-web/supports v0.2.0
 	github.com/goal-web/validation v0.2.0
-	github.com/labstack/echo/v4 v4.6.3
 )
 
 require (
@@ -16,6 +15,8 @@ require (
 	github.com/go-playground/locales v0.14.0 // indirect
 	github.com/go-playground/universal-translator v0.18.0 // indirect
 	github.com/go-playground/validator/v10 v10.10.0 // indirect
+	github.com/goal-web/container v0.2.0 // indirect
+	github.com/labstack/echo/v4 v4.6.3 // indirect
 	github.com/labstack/gommon v0.3.1 // indirect
 	github.com/leodido/go-urn v1.2.1 // indirect
 	github.com/mattn/go-colorable v0.1.11 // indirect

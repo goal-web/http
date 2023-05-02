@@ -3,14 +3,15 @@ package http
 import (
 	"fmt"
 	"github.com/goal-web/contracts"
+	"github.com/goal-web/routing"
 	"github.com/goal-web/supports/logs"
 	"github.com/goal-web/supports/utils"
 	"net/http"
 )
 
 type ServiceProvider struct {
-	app contracts.Application
-
+	app             contracts.Application
+	engine          contracts.HttpEngine
 	RouteCollectors []any
 }
 
@@ -19,9 +20,9 @@ func NewService(routes ...any) contracts.ServiceProvider {
 }
 
 func (provider *ServiceProvider) Stop() {
-	provider.app.Call(func(dispatcher contracts.EventDispatcher, router contracts.Router) {
-		if err := router.Close(); err != nil {
-			logs.WithError(err).Info("Router 关闭报错")
+	provider.app.Call(func(dispatcher contracts.EventDispatcher) {
+		if err := provider.engine.Close(); err != nil {
+			logs.WithError(err).Info("failed to close http engine.")
 		}
 		dispatcher.Dispatch(&ServeClosed{})
 	})
@@ -33,14 +34,29 @@ func (provider *ServiceProvider) Start() error {
 	}
 
 	var err error
-	provider.app.Call(func(router contracts.Router, config contracts.Config) {
+	provider.app.Call(func(
+		router contracts.HttpRouter,
+		config contracts.Config,
+		events contracts.EventDispatcher,
+	) {
 		httpConfig := config.Get("http").(Config)
 
-		for prefix, directory := range httpConfig.StaticDirectories {
-			router.Static(prefix, directory)
+		provider.engine = &Engine{
+			router:      router,
+			middlewares: append(routing.ConvertToMiddlewares(httpConfig.GlobalMiddlewares...), router.Middlewares()...),
+			app:         provider.app,
 		}
 
-		err = router.Start(
+		for prefix, directory := range httpConfig.StaticDirectories {
+			provider.engine.Static(prefix, directory)
+		}
+
+		err = router.Mount()
+		if err != nil {
+			return
+		}
+
+		err = provider.engine.Start(
 			utils.StringOr(
 				httpConfig.Address,
 				fmt.Sprintf("%s:%s", httpConfig.Host, utils.StringOr(httpConfig.Port, "8000")),
@@ -49,7 +65,7 @@ func (provider *ServiceProvider) Start() error {
 	})
 
 	if err != nil && err != http.ErrServerClosed {
-		logs.WithError(err).Error("http 服务无法启动")
+		logs.WithError(err).Error("http service failed to start")
 		go func() { provider.app.Stop() }()
 		return err
 	}
@@ -60,7 +76,7 @@ func (provider *ServiceProvider) Start() error {
 func (provider *ServiceProvider) Register(app contracts.Application) {
 	provider.app = app
 
-	app.Singleton("Router", func() contracts.Router {
-		return New(provider.app)
+	app.Singleton("HttpRouter", func() contracts.HttpRouter {
+		return routing.NewHttpRouter(provider.app)
 	})
 }
