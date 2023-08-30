@@ -1,18 +1,26 @@
 package http
 
 import (
+	"errors"
 	"fmt"
 	"github.com/goal-web/contracts"
 	"github.com/goal-web/pipeline"
 	"github.com/goal-web/routing"
-	"net/http"
+	"github.com/valyala/fasthttp"
+	"net/url"
+	"strings"
 )
 
 type Engine struct {
 	middlewares []contracts.MagicalFunc
 	router      contracts.HttpRouter
-	server      *http.Server
 	app         contracts.Application
+	server      *fasthttp.Server
+}
+
+func (e *Engine) Request() contracts.HttpRequest {
+	//TODO implement me
+	panic("implement me")
 }
 
 var (
@@ -31,16 +39,17 @@ func wrapperResponse(result any) contracts.HttpResponse {
 	}
 }
 
-func (e *Engine) ServeHTTP(writer http.ResponseWriter, r *http.Request) {
-	route, params, routeErr := e.router.Route(r.Method, r.URL)
-	request := NewRequest(r, params)
+func (e *Engine) HandleFastHTTP(ctx *fasthttp.RequestCtx) {
+	uri, _ := url.Parse(string(ctx.URI().FullURI()))
+	route, params, routeErr := e.router.Route(string(ctx.Method()), uri)
+	request := NewRequest(ctx, params)
 
 	if routeErr != nil {
-		switch routeErr {
-		case routing.MethodNotAllowErr:
-			e.handleResponse(MethodNotAllowResponse, writer)
-		case routing.NotFoundErr:
-			e.handleResponse(NotFoundResponse, writer)
+		switch {
+		case errors.Is(routeErr, routing.MethodNotAllowErr):
+			e.handleResponse(MethodNotAllowResponse, ctx)
+		case errors.Is(routeErr, routing.NotFoundErr):
+			e.handleResponse(NotFoundResponse, ctx)
 		}
 		return
 	}
@@ -60,24 +69,34 @@ func (e *Engine) ServeHTTP(writer http.ResponseWriter, r *http.Request) {
 			ThenStatic(route.Handler())
 	}
 
-	e.handleResponse(wrapperResponse(result), writer)
+	e.handleResponse(wrapperResponse(result), ctx)
 }
 
-func (e *Engine) handleResponse(response contracts.HttpResponse, writer http.ResponseWriter) {
-	writer.WriteHeader(response.Status())
-	size, err := writer.Write(response.Bytes())
+func (e *Engine) handleResponse(response contracts.HttpResponse, ctx *fasthttp.RequestCtx) {
+	for key, value := range response.Headers() {
+		if len(value) > 1 {
+			ctx.Response.Header.Set(key, strings.Join(value, ";"))
+		} else {
+			ctx.Response.Header.Set(key, value[0])
+		}
+	}
+	ctx.SetStatusCode(response.Status())
+	size, err := ctx.Write(response.Bytes())
 	if err != nil {
 		fmt.Println(size, err)
 	}
 }
 
 func (e *Engine) Start(address string) error {
-	e.server = &http.Server{Addr: address, Handler: e}
-	return e.server.ListenAndServe()
+	e.server = &fasthttp.Server{
+		Handler: e.HandleFastHTTP,
+	}
+
+	return e.server.ListenAndServe(address)
 }
 
 func (e *Engine) Close() error {
-	return e.server.Close()
+	return e.server.Shutdown()
 }
 
 func (e *Engine) Static(prefix, directory string) {

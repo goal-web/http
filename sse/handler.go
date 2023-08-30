@@ -1,7 +1,6 @@
 package sse
 
 import (
-	"bytes"
 	"fmt"
 	"github.com/goal-web/contracts"
 	"github.com/goal-web/http"
@@ -16,11 +15,10 @@ func New(controller contracts.SseController) any {
 			return err
 		}
 
-		var response = request.Request().Response
-		response.Header.Set("Content-Type", "text/event-stream")
-		response.Header.Set("Cache-Control", "no-cache")
-		response.Header.Set("Connection", "keep-alive")
-		response.Header.Set("Access-Control-Allow-Origin", "*")
+		request.SetHeader("Content-Type", "text/event-stream")
+		request.SetHeader("Cache-Control", "no-cache")
+		request.SetHeader("Connection", "keep-alive")
+		request.SetHeader("Access-Control-Allow-Origin", "*")
 
 		var (
 			messageChan = make(chan any)
@@ -40,8 +38,7 @@ func New(controller contracts.SseController) any {
 		for {
 			select {
 			case message := <-messageChan:
-				var err = response.Write(bytes.NewBuffer([]byte(fmt.Sprintf("%s\n", handleMessage(message, serializer)))))
-				//var _, err = fmt.Fprintf(response, "%s\n", handleMessage(message, serializer))
+				var _, err = request.Request.Write([]byte(fmt.Sprintf("%s\n", handleMessage(message, serializer))))
 				if err != nil {
 					logs.WithError(err).
 						WithField("message", message).WithField("fd", fd).
@@ -54,7 +51,8 @@ func New(controller contracts.SseController) any {
 				return nil
 
 			// connection is closed then defer will be executed
-			case <-request.Request().Context().Done():
+			//case <-request.Request().Context().Done():
+			case <-request.Request.Done():
 				_ = sse.Close(fd)
 				return nil
 			}
