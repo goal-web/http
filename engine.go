@@ -18,6 +18,14 @@ type Engine struct {
 	server      *fasthttp.Server
 }
 
+func NewEngine(app contracts.Application, router contracts.HttpRouter, middlewares []contracts.MagicalFunc) contracts.HttpEngine {
+	return &Engine{
+		router:      router,
+		app:         app,
+		middlewares: middlewares,
+	}
+}
+
 func (e *Engine) Request() contracts.HttpRequest {
 	//TODO implement me
 	panic("implement me")

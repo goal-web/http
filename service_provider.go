@@ -6,12 +6,12 @@ import (
 	"github.com/goal-web/routing"
 	"github.com/goal-web/supports/logs"
 	"github.com/goal-web/supports/utils"
+	"github.com/pkg/errors"
 	"net/http"
 )
 
 type ServiceProvider struct {
 	app             contracts.Application
-	engine          contracts.HttpEngine
 	RouteCollectors []any
 }
 
@@ -20,8 +20,8 @@ func NewService(routes ...any) contracts.ServiceProvider {
 }
 
 func (provider *ServiceProvider) Stop() {
-	provider.app.Call(func(dispatcher contracts.EventDispatcher) {
-		if err := provider.engine.Close(); err != nil {
+	provider.app.Call(func(dispatcher contracts.EventDispatcher, engine contracts.HttpEngine) {
+		if err := engine.Close(); err != nil {
 			logs.WithError(err).Info("failed to close http engine.")
 		}
 		dispatcher.Dispatch(&ServeClosed{})
@@ -36,19 +36,14 @@ func (provider *ServiceProvider) Start() error {
 	var err error
 	provider.app.Call(func(
 		router contracts.HttpRouter,
+		engine contracts.HttpEngine,
 		config contracts.Config,
 		events contracts.EventDispatcher,
 	) {
 		httpConfig := config.Get("http").(Config)
 
-		provider.engine = &Engine{
-			router:      router,
-			middlewares: append(routing.ConvertToMiddlewares(httpConfig.GlobalMiddlewares...), router.Middlewares()...),
-			app:         provider.app,
-		}
-
 		for prefix, directory := range httpConfig.StaticDirectories {
-			provider.engine.Static(prefix, directory)
+			engine.Static(prefix, directory)
 		}
 
 		err = router.Mount()
@@ -56,7 +51,7 @@ func (provider *ServiceProvider) Start() error {
 			return
 		}
 
-		err = provider.engine.Start(
+		err = engine.Start(
 			utils.StringOr(
 				httpConfig.Address,
 				fmt.Sprintf("%s:%s", httpConfig.Host, utils.StringOr(httpConfig.Port, "8000")),
@@ -64,7 +59,7 @@ func (provider *ServiceProvider) Start() error {
 		)
 	})
 
-	if err != nil && err != http.ErrServerClosed {
+	if err != nil && !errors.Is(err, http.ErrServerClosed) {
 		logs.WithError(err).Error("http service failed to start")
 		go func() { provider.app.Stop() }()
 		return err
@@ -78,5 +73,9 @@ func (provider *ServiceProvider) Register(app contracts.Application) {
 
 	app.Singleton("HttpRouter", func() contracts.HttpRouter {
 		return routing.NewHttpRouter(provider.app)
+	})
+	app.Singleton("HttpEngine", func(router contracts.HttpRouter, config contracts.Config) contracts.HttpEngine {
+		httpConfig := config.Get("http").(Config)
+		return NewEngine(provider.app, router, append(routing.ConvertToMiddlewares(httpConfig.GlobalMiddlewares...), router.Middlewares()...))
 	})
 }
