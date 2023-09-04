@@ -3,6 +3,7 @@ package http
 import (
 	"errors"
 	"fmt"
+	"github.com/goal-web/container"
 	"github.com/goal-web/contracts"
 	"github.com/goal-web/pipeline"
 	"github.com/goal-web/routing"
@@ -62,7 +63,8 @@ func (e *Engine) HandleFastHTTP(ctx *fasthttp.RequestCtx) {
 		return
 	}
 
-	pipes := append(e.middlewares, route.Middlewares()...)
+	pipes := append([]contracts.MagicalFunc{container.NewMagicalFunc(recovery)}, e.middlewares...)
+	pipes = append(pipes, route.Middlewares()...)
 
 	var result any
 	if len(pipes) == 0 {

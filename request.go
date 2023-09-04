@@ -12,10 +12,6 @@ import (
 	"sync"
 )
 
-var (
-	defaultMemory int64 = 32 << 20 // 32 MB =
-)
-
 type Request struct {
 	supports.BaseFields
 	params  contracts.RouteParams

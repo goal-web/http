@@ -2,13 +2,15 @@ package http
 
 import (
 	"github.com/goal-web/contracts"
+	"github.com/goal-web/supports/exceptions"
 )
 
-func recovery(request contracts.HttpRequest, next contracts.Pipe) (result any) {
+func recovery(request contracts.HttpRequest, next contracts.Pipe, handler contracts.ExceptionHandler) (result any) {
 	defer func() {
 		if panicValue := recover(); panicValue != nil {
-			// todo
+			result = handler.Handle(exceptions.WrapException(panicValue))
 		}
 	}()
-	return next(request)
+	result = next(request)
+	return
 }
