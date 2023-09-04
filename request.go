@@ -1,8 +1,10 @@
 package http
 
 import (
+	"encoding/json"
 	"github.com/goal-web/contracts"
 	"github.com/goal-web/supports"
+	"github.com/goal-web/supports/logs"
 	"github.com/valyala/fasthttp"
 	"mime/multipart"
 	"net"
@@ -221,6 +223,14 @@ func (req *Request) Fields() contracts.Fields {
 		return req.fields
 	}
 	var data = make(contracts.Fields)
+
+	if strings.Contains(req.GetHeader("Content-Type"), "application/json") {
+		if err := json.Unmarshal(req.Request.PostBody(), &data); err != nil {
+			logs.Default().WithField("parse", "failed to parse json body").Error(err.Error())
+		} else {
+			return data
+		}
+	}
 
 	for key, query := range req.QueryParams() {
 		if len(query) == 1 {
