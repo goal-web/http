@@ -207,7 +207,7 @@ func (req *Request) parseFields() {
 
 	if strings.Contains(req.GetHeader("content-type"), "application/json") {
 		jsonFields := make(contracts.Fields)
-		if err := json.Unmarshal(req.Request.PostBody(), &jsonFields); err != nil {
+		if err := json.Unmarshal(req.Request.PostBody(), &jsonFields); err == nil {
 			for key, value := range jsonFields {
 				req.context[key] = value
 			}
