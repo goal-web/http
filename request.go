@@ -19,7 +19,6 @@ type Request struct {
 	query     *fasthttp.Args
 	context   contracts.Fields
 	Request   *fasthttp.RequestCtx
-	fields    contracts.Fields
 	lock      sync.RWMutex
 	initialed bool
 }
@@ -29,6 +28,7 @@ func NewRequest(req *fasthttp.RequestCtx, params contracts.RouteParams) contract
 		BaseFields: supports.BaseFields{},
 		Request:    req,
 		params:     params,
+		context:    make(contracts.Fields),
 	}
 	request.BaseFields.FieldsProvider = request
 	request.BaseFields.OptionalGetter = request.Optional
