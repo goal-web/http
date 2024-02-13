@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"github.com/goal-web/contracts"
 	"github.com/goal-web/supports"
-	"github.com/goal-web/supports/logs"
 	"github.com/valyala/fasthttp"
 	"mime/multipart"
 	"net"
@@ -16,12 +15,13 @@ import (
 
 type Request struct {
 	supports.BaseFields
-	params  contracts.RouteParams
-	query   *fasthttp.Args
-	context map[string]any
-	Request *fasthttp.RequestCtx
-	fields  contracts.Fields
-	lock    sync.RWMutex
+	params    contracts.RouteParams
+	query     *fasthttp.Args
+	context   contracts.Fields
+	Request   *fasthttp.RequestCtx
+	fields    contracts.Fields
+	lock      sync.RWMutex
+	initialed bool
 }
 
 func NewRequest(req *fasthttp.RequestCtx, params contracts.RouteParams) contracts.HttpRequest {
@@ -181,90 +181,66 @@ func (req *Request) Cookies() []*http.Cookie {
 func (req *Request) Set(key string, val interface{}) {
 	req.lock.Lock()
 	defer req.lock.Unlock()
-
-	// todo
+	req.context[key] = val
 }
 
 func (req *Request) Get(key string) any {
 	return req.Optional(key, nil)
 }
+func (req *Request) parseFields() {
+	if req.initialed {
+		return
+	}
+	req.lock.Lock()
+	defer func() {
+		req.initialed = true
+		req.lock.Unlock()
+	}()
 
-func (req *Request) Optional(key string, defaultValue any) (value any) {
-	//if value = req.Context.Get(key); value != nil {
-	//	return value
-	//}
-	//if value = req.Context.Param(key); value != nil && value != "" {
-	//	return value
-	//}
-	//if req.Context.QueryParams().Has(key) {
-	//	return req.Context.QueryParam(key)
-	//}
-	//form, err := req.Context.MultipartForm()
-	//if err != nil {
-	//	return defaultValue
-	//}
-	//if files, isFile := form.File[key]; isFile {
-	//	if len(files) == 1 {
-	//		return files[0]
-	//	}
-	//	return files
-	//} else if values, isValue := form.Value[key]; isValue {
-	//	if len(values) == 1 {
-	//		return values[0]
-	//	}
-	//	return values
-	//}
+	for key, value := range req.QueryParams() {
+		if len(value) == 1 {
+			req.context[key] = value[0]
+		} else {
+			req.context[key] = value
+		}
+	}
+
+	if strings.Contains(req.GetHeader("Content-Type"), "application/json") {
+		jsonFields := make(contracts.Fields)
+		if err := json.Unmarshal(req.Request.PostBody(), &jsonFields); err != nil {
+			for key, value := range jsonFields {
+				req.context[key] = value
+			}
+		}
+	} else if form, err := req.Request.MultipartForm(); err != nil {
+		for key, value := range form.Value {
+			if len(value) == 1 {
+				req.context[key] = value[0]
+			} else {
+				req.context[key] = value
+			}
+		}
+
+		for key, value := range form.File {
+			if len(value) == 1 {
+				req.context[key] = value[0]
+			} else {
+				req.context[key] = value
+			}
+		}
+	}
+
+}
+
+func (req *Request) Optional(key string, defaultValue any) any {
+	if value, exists := req.context[key]; exists {
+		return value
+	}
 
 	return defaultValue
 }
 
 func (req *Request) Fields() contracts.Fields {
-	if req.fields != nil {
-		return req.fields
-	}
-	var data = make(contracts.Fields)
-
-	if strings.Contains(req.GetHeader("Content-Type"), "application/json") {
-		if err := json.Unmarshal(req.Request.PostBody(), &data); err != nil {
-			logs.Default().WithField("parse", "failed to parse json body").Error(err.Error())
-		} else {
-			return data
-		}
-	}
-
-	for key, query := range req.QueryParams() {
-		if len(query) == 1 {
-			data[key] = query[0]
-		} else {
-			data[key] = query
-		}
-	}
-	//for _, paramName := range req.ParamNames() {
-	//	data[paramName] = req.Param(paramName)
-	//}
-	if form, existsForm := req.FormParams(); existsForm == nil {
-		for key, values := range form {
-			data[key] = values
-		}
-	}
-	if multiForm, existsForm := req.MultipartForm(); existsForm == nil {
-		for key, values := range multiForm.Value {
-			if len(values) == 1 {
-				data[key] = values[0]
-			} else {
-				data[key] = values
-			}
-		}
-		for key, values := range multiForm.File {
-			if len(values) == 1 {
-				data[key] = values[0]
-			} else {
-				data[key] = values
-			}
-		}
-	}
-
-	req.fields = data
-
-	return data
+	req.parseFields()
+	return req.context
 }
