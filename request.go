@@ -233,6 +233,7 @@ func (req *Request) parseFields() {
 }
 
 func (req *Request) Optional(key string, defaultValue any) any {
+	req.parseFields()
 	if value, exists := req.context[key]; exists {
 		return value
 	}
