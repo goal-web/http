@@ -205,14 +205,14 @@ func (req *Request) parseFields() {
 		}
 	}
 
-	if strings.Contains(req.GetHeader("Content-Type"), "application/json") {
+	if strings.Contains(req.GetHeader("content-type"), "application/json") {
 		jsonFields := make(contracts.Fields)
 		if err := json.Unmarshal(req.Request.PostBody(), &jsonFields); err != nil {
 			for key, value := range jsonFields {
 				req.context[key] = value
 			}
 		}
-	} else if form, err := req.Request.MultipartForm(); err != nil {
+	} else if form, err := req.Request.MultipartForm(); err == nil && form != nil {
 		for key, value := range form.Value {
 			if len(value) == 1 {
 				req.context[key] = value[0]
