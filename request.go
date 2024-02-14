@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"github.com/goal-web/contracts"
 	"github.com/goal-web/supports"
+	"github.com/goal-web/supports/utils"
 	"github.com/valyala/fasthttp"
 	"mime/multipart"
 	"net"
@@ -33,6 +34,7 @@ func NewRequest(req *fasthttp.RequestCtx, params contracts.RouteParams) contract
 	request.BaseFields.FieldsProvider = request
 	request.BaseFields.OptionalGetter = request.Optional
 
+	request.parseFields()
 	return request
 }
 
@@ -233,7 +235,6 @@ func (req *Request) parseFields() {
 }
 
 func (req *Request) Optional(key string, defaultValue any) any {
-	req.parseFields()
 	if value, exists := req.context[key]; exists {
 		return value
 	}
@@ -242,6 +243,23 @@ func (req *Request) Optional(key string, defaultValue any) any {
 }
 
 func (req *Request) Fields() contracts.Fields {
-	req.parseFields()
 	return req.context
+}
+
+func (req *Request) Only(keys ...string) contracts.Fields {
+	fields := contracts.Fields{}
+	for _, key := range keys {
+		fields[key] = req.context[key]
+	}
+	return fields
+}
+
+func (req *Request) Except(keys ...string) contracts.Fields {
+	fields := contracts.Fields{}
+	for key, value := range req.context {
+		if utils.IsNotInT(key, keys) {
+			fields[key] = value
+		}
+	}
+	return fields
 }
