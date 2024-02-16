@@ -19,6 +19,7 @@ type Request struct {
 	params    contracts.RouteParams
 	query     *fasthttp.Args
 	context   contracts.Fields
+	fields    contracts.Fields
 	Request   *fasthttp.RequestCtx
 	lock      sync.RWMutex
 	initialed bool
@@ -30,6 +31,7 @@ func NewRequest(req *fasthttp.RequestCtx, params contracts.RouteParams) contract
 		Request:    req,
 		params:     params,
 		context:    make(contracts.Fields),
+		fields:     make(contracts.Fields),
 	}
 	request.BaseFields.FieldsProvider = request
 	request.BaseFields.OptionalGetter = request.Optional
@@ -201,9 +203,9 @@ func (req *Request) parseFields() {
 
 	for key, value := range req.QueryParams() {
 		if len(value) == 1 {
-			req.context[key] = value[0]
+			req.fields[key] = value[0]
 		} else {
-			req.context[key] = value
+			req.fields[key] = value
 		}
 	}
 
@@ -211,23 +213,23 @@ func (req *Request) parseFields() {
 		jsonFields := make(contracts.Fields)
 		if err := json.Unmarshal(req.Request.PostBody(), &jsonFields); err == nil {
 			for key, value := range jsonFields {
-				req.context[key] = value
+				req.fields[key] = value
 			}
 		}
 	} else if form, err := req.Request.MultipartForm(); err == nil && form != nil {
 		for key, value := range form.Value {
 			if len(value) == 1 {
-				req.context[key] = value[0]
+				req.fields[key] = value[0]
 			} else {
-				req.context[key] = value
+				req.fields[key] = value
 			}
 		}
 
 		for key, value := range form.File {
 			if len(value) == 1 {
-				req.context[key] = value[0]
+				req.fields[key] = value[0]
 			} else {
-				req.context[key] = value
+				req.fields[key] = value
 			}
 		}
 	}
@@ -238,12 +240,15 @@ func (req *Request) Optional(key string, defaultValue any) any {
 	if value, exists := req.context[key]; exists {
 		return value
 	}
+	if value, exists := req.fields[key]; exists {
+		return value
+	}
 
 	return defaultValue
 }
 
 func (req *Request) Fields() contracts.Fields {
-	return req.context
+	return req.fields
 }
 
 func (req *Request) Only(keys ...string) contracts.Fields {
