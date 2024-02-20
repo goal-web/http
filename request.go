@@ -98,6 +98,10 @@ func (req *Request) Path() string {
 	return string(req.Request.Request.URI().Path())
 }
 
+func (req *Request) Parse(data any) error {
+	return json.Unmarshal(req.Request.PostBody(), data)
+}
+
 func (req *Request) Param(name string) string {
 	return req.params[name]
 }

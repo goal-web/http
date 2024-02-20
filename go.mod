@@ -5,7 +5,7 @@ go 1.20
 require (
 	github.com/fasthttp/websocket v1.5.7
 	github.com/goal-web/container v0.2.0
-	github.com/goal-web/contracts v0.2.2
+	github.com/goal-web/contracts v0.2.3
 	github.com/goal-web/pipeline v0.2.0
 	github.com/goal-web/routing v0.0.0-20230501162547-1fb838ef8fbe
 	github.com/goal-web/supports v0.2.4
