@@ -2,13 +2,18 @@ package sse
 
 import (
 	"fmt"
+	"github.com/goal-web/application"
 	"github.com/goal-web/contracts"
 	"github.com/goal-web/http"
 	"github.com/goal-web/supports/logs"
 )
 
-func New(controller contracts.SseController) any {
-	return func(request *http.Request, serializer contracts.Serializer, sse contracts.Sse) error {
+func New(path string, controller contracts.SseController) (string, any) {
+	factory := application.Get("sse.factory").(contracts.SseFactory)
+	factory.Register(path, NewSse())
+
+	return path, func(request *http.Request, serializer contracts.Serializer, sseFactory contracts.SseFactory) error {
+		sse := sseFactory.Sse(path)
 		var fd = sse.GetFd()
 		if err := controller.OnConnect(request, fd); err != nil {
 			logs.WithError(err).WithFields(request.Fields()).WithField("fd", fd).Debug("sse.NewRouter: OnConnect failed")

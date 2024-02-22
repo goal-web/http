@@ -2,7 +2,6 @@ package sse
 
 import (
 	"github.com/goal-web/contracts"
-	"sync"
 )
 
 type ServiceProvider struct {
@@ -14,12 +13,10 @@ func NewService() contracts.ServiceProvider {
 
 func (provider ServiceProvider) Register(application contracts.Application) {
 	application.Singleton("sse", func() contracts.Sse {
-		return &Sse{
-			fdMutex:     sync.Mutex{},
-			connMutex:   sync.Mutex{},
-			connections: map[uint64]contracts.SseConnection{},
-			count:       0,
-		}
+		return NewSse()
+	})
+	application.Singleton("sse.factory", func() contracts.SseFactory {
+		return NewFactory()
 	})
 }
 

@@ -4,8 +4,8 @@ import (
 	"github.com/goal-web/contracts"
 )
 
-func Default() any {
-	return New(&DefaultController{})
+func Default() (string, any) {
+	return New("sse", &DefaultController{})
 }
 
 type DefaultController struct {
