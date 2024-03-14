@@ -20,10 +20,10 @@ func New(path string, controller contracts.SseController) (string, any) {
 			return err
 		}
 
-		request.SetHeader("Content-Type", "text/event-stream")
-		request.SetHeader("Cache-Control", "no-cache")
-		request.SetHeader("Connection", "keep-alive")
-		request.SetHeader("Access-Control-Allow-Origin", "*")
+		request.Request.Response.Header.Set("Content-Type", "text/event-stream")
+		request.Request.Response.Header.Set("Cache-Control", "no-cache")
+		request.Request.Response.Header.Set("Connection", "keep-alive")
+		request.Request.Response.Header.Set("Access-Control-Allow-Origin", "*")
 
 		var (
 			messageChan = make(chan any)
