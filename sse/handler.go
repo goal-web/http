@@ -20,7 +20,7 @@ func New(path string, controller contracts.SseController) (string, any) {
 			return err
 		}
 
-		request.Request.Response.Header.Set("Content-Type", "text/event-stream")
+		request.Request.SetContentType("text/event-stream")
 		request.Request.Response.Header.Set("Cache-Control", "no-cache")
 		request.Request.Response.Header.Set("Connection", "keep-alive")
 		request.Request.Response.Header.Set("Access-Control-Allow-Origin", "*")
@@ -43,7 +43,7 @@ func New(path string, controller contracts.SseController) (string, any) {
 		for {
 			select {
 			case message := <-messageChan:
-				var _, err = request.Request.Write([]byte(fmt.Sprintf("%s\n", handleMessage(message, serializer))))
+				var _, err = request.Request.Response.BodyWriter().Write([]byte(fmt.Sprintf("%s\n", handleMessage(message, serializer))))
 				if err != nil {
 					logs.WithError(err).
 						WithField("message", message).WithField("fd", fd).
