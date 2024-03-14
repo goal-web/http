@@ -79,7 +79,9 @@ func (e *Engine) HandleFastHTTP(ctx *fasthttp.RequestCtx) {
 			ThenStatic(route.Handler())
 	}
 
-	e.handleResponse(wrapperResponse(result), ctx)
+	if result != nil {
+		e.handleResponse(wrapperResponse(result), ctx)
+	}
 }
 
 func (e *Engine) handleResponse(response contracts.HttpResponse, ctx *fasthttp.RequestCtx) {
