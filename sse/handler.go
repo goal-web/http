@@ -56,6 +56,13 @@ func New(path string, controller contracts.SseController) (string, any) {
 							Error("sse.NewRouter: response.Write failed")
 						return
 					}
+					err = w.Flush()
+					if err != nil {
+						logs.WithError(err).
+							WithField("message", message).WithField("fd", fd).
+							Error("sse.NewRouter: response.Write failed")
+						return
+					}
 					//response todo
 				case <-closeChan:
 					return
