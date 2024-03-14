@@ -1,6 +1,7 @@
 package sse
 
 import (
+	"bufio"
 	"fmt"
 	"github.com/goal-web/application"
 	"github.com/goal-web/contracts"
@@ -21,8 +22,12 @@ func New(path string, controller contracts.SseController) (string, any) {
 		}
 
 		request.Request.SetContentType("text/event-stream")
+
 		request.Request.Response.Header.Set("Cache-Control", "no-cache")
 		request.Request.Response.Header.Set("Connection", "keep-alive")
+		request.Request.Response.Header.Set("Transfer-Encoding", "chunked")
+		request.Request.Response.Header.Set("Access-Control-Allow-Headers", "Cache-Control")
+		request.Request.Response.Header.Set("Access-Control-Allow-Credentials", "true")
 		request.Request.Response.Header.Set("Access-Control-Allow-Origin", "*")
 
 		var (
@@ -39,29 +44,30 @@ func New(path string, controller contracts.SseController) (string, any) {
 			closeChan = nil
 			messageChan = nil
 		}()
-
-		for {
-			select {
-			case message := <-messageChan:
-				var _, err = request.Request.Response.BodyWriter().Write([]byte(fmt.Sprintf("%s\n", handleMessage(message, serializer))))
-				if err != nil {
-					logs.WithError(err).
-						WithField("message", message).WithField("fd", fd).
-						Error("sse.NewRouter: response.Write failed")
-					return nil
+		var err error
+		request.Request.SetBodyStreamWriter(func(w *bufio.Writer) {
+			for {
+				select {
+				case message := <-messageChan:
+					_, err = w.Write([]byte(fmt.Sprintf("%s\n", handleMessage(message, serializer))))
+					if err != nil {
+						logs.WithError(err).
+							WithField("message", message).WithField("fd", fd).
+							Error("sse.NewRouter: response.Write failed")
+						return
+					}
+					//response todo
+				case <-closeChan:
+					return
+				// connection is closed then defer will be executed
+				//case <-request.Request().Context().Done():
+				case <-request.Request.Done():
+					_ = sse.Close(fd)
+					return
 				}
-				//response todo
-
-			case <-closeChan:
-				return nil
-
-			// connection is closed then defer will be executed
-			//case <-request.Request().Context().Done():
-			case <-request.Request.Done():
-				_ = sse.Close(fd)
-				return nil
 			}
-		}
+		})
+		return err
 	}
 }
 
