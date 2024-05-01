@@ -2,7 +2,6 @@ package sse
 
 import (
 	"bufio"
-	"fmt"
 	"github.com/goal-web/application"
 	"github.com/goal-web/contracts"
 	"github.com/goal-web/http"
@@ -22,13 +21,14 @@ func New(path string, controller contracts.SseController) (string, any) {
 		}
 
 		request.Request.SetContentType("text/event-stream")
-
 		request.Request.Response.Header.Set("Cache-Control", "no-cache")
 		request.Request.Response.Header.Set("Connection", "keep-alive")
 		request.Request.Response.Header.Set("Transfer-Encoding", "chunked")
-		request.Request.Response.Header.Set("Access-Control-Allow-Headers", "Cache-Control")
-		request.Request.Response.Header.Set("Access-Control-Allow-Credentials", "true")
+
+		// 添加 CORS 头部，允许所有来源的请求
 		request.Request.Response.Header.Set("Access-Control-Allow-Origin", "*")
+		request.Request.Response.Header.Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+		request.Request.Response.Header.Set("Access-Control-Allow-Headers", "Content-Type,Accept")
 
 		var (
 			messageChan = make(chan any)
@@ -37,19 +37,18 @@ func New(path string, controller contracts.SseController) (string, any) {
 		)
 		sse.Add(conn)
 
-		defer func() {
-			controller.OnClose(fd)
-			close(messageChan)
-			close(closeChan)
-			closeChan = nil
-			messageChan = nil
-		}()
-		var err error
 		request.Request.SetBodyStreamWriter(func(w *bufio.Writer) {
+			defer func() {
+				controller.OnClose(fd)
+				close(messageChan)
+				close(closeChan)
+				closeChan = nil
+				messageChan = nil
+			}()
 			for {
 				select {
 				case message := <-messageChan:
-					_, err = w.Write([]byte(fmt.Sprintf("%s\n", handleMessage(message, serializer))))
+					_, err := w.WriteString("data: " + handleMessage(message, serializer) + "\n\n")
 					if err != nil {
 						logs.WithError(err).
 							WithField("message", message).WithField("fd", fd).
@@ -67,7 +66,6 @@ func New(path string, controller contracts.SseController) (string, any) {
 				case <-closeChan:
 					return
 				// connection is closed then defer will be executed
-				//case <-request.Request().Context().Done():
 				case <-request.Request.Done():
 					_ = sse.Close(fd)
 					return
@@ -78,13 +76,13 @@ func New(path string, controller contracts.SseController) (string, any) {
 	}
 }
 
-func handleMessage(msg any, serializer contracts.Serializer) []byte {
+func handleMessage(msg any, serializer contracts.Serializer) string {
 	switch v := msg.(type) {
 	case []byte:
-		return v
+		return string(v)
 	case string:
-		return []byte(v)
+		return v
 	default:
-		return []byte(serializer.Serialize(msg))
+		return serializer.Serialize(msg)
 	}
 }
