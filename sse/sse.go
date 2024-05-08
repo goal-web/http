@@ -51,6 +51,9 @@ func (sse *Sse) Close(fd uint64) error {
 		sse.connMutex.Lock()
 		defer sse.connMutex.Unlock()
 		delete(sse.connections, fd)
+		sse.fdMutex.Lock()
+		defer sse.fdMutex.Unlock()
+		sse.count--
 		return conn.Close()
 	}
 

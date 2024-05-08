@@ -6,6 +6,7 @@ import (
 	"github.com/goal-web/contracts"
 	"github.com/goal-web/http"
 	"github.com/goal-web/supports/logs"
+	"time"
 )
 
 func New(path string, controller contracts.SseController) (string, any) {
@@ -38,13 +39,38 @@ func New(path string, controller contracts.SseController) (string, any) {
 		sse.Add(conn)
 
 		request.Request.SetBodyStreamWriter(func(w *bufio.Writer) {
+
+			// Create a ticker to send heartbeat messages
+			ticker := time.NewTicker(1 * time.Second)
+
 			defer func() {
 				controller.OnClose(fd)
 				close(messageChan)
 				close(closeChan)
 				closeChan = nil
 				messageChan = nil
+				ticker.Stop()
+				request.Request.SetConnectionClose()
 			}()
+
+			go func() {
+				for {
+					<-ticker.C
+					_, err := w.WriteString("data: heartbeat\n\n")
+					if err != nil {
+						logs.WithError(err).WithField("fd", fd).Error("sse heartbeat: response.Write failed")
+						_ = sse.Close(fd)
+						return
+					}
+					err = w.Flush()
+					if err != nil {
+						logs.WithError(err).WithField("fd", fd).Error("sse heartbeat: response.Flush failed")
+						_ = sse.Close(fd)
+						return
+					}
+				}
+			}()
+
 			for {
 				select {
 				case message := <-messageChan:
