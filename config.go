@@ -1,5 +1,7 @@
 package http
 
+import "time"
+
 type Config struct {
 	Address           string
 	Host              string
@@ -7,4 +9,5 @@ type Config struct {
 	GlobalMiddlewares []any
 
 	StaticDirectories map[string]string
+	SseHeartBeat      time.Duration
 }

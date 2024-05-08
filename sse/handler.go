@@ -13,13 +13,14 @@ func New(path string, controller contracts.SseController) (string, any) {
 	factory := application.Get("sse.factory").(contracts.SseFactory)
 	factory.Register(path, NewSse())
 
-	return path, func(request *http.Request, serializer contracts.Serializer, sseFactory contracts.SseFactory) any {
+	return path, func(request *http.Request, serializer contracts.Serializer, sseFactory contracts.SseFactory, config contracts.Config) any {
 		sse := sseFactory.Sse(path)
 		var fd = sse.GetFd()
 		if err := controller.OnConnect(request, fd); err != nil {
 			logs.WithError(err).WithFields(request.Fields()).WithField("fd", fd).Debug("sse.NewRouter: OnConnect failed")
 			return nil
 		}
+		httpConfig := config.Get("http").(http.Config)
 
 		request.Request.SetContentType("text/event-stream")
 		request.Request.Response.Header.Set("Cache-Control", "no-cache")
@@ -41,7 +42,7 @@ func New(path string, controller contracts.SseController) (string, any) {
 		request.Request.SetBodyStreamWriter(func(w *bufio.Writer) {
 
 			// Create a ticker to send heartbeat messages
-			ticker := time.NewTicker(1 * time.Second)
+			ticker := time.NewTicker(httpConfig.SseHeartBeat)
 
 			defer func() {
 				controller.OnClose(fd)
