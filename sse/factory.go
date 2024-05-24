@@ -20,7 +20,7 @@ func NewFactory() contracts.SseFactory {
 func (factory *Factory) Sse(key string) contracts.Sse {
 	factory.mutex.RLock()
 	defer factory.mutex.RUnlock()
-	driver, _ := factory.drivers[key]
+	driver := factory.drivers[key]
 	return driver
 }
 

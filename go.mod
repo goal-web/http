@@ -4,12 +4,6 @@ go 1.20
 
 require (
 	github.com/fasthttp/websocket v1.5.7
-	github.com/goal-web/application v0.3.0
-	github.com/goal-web/container v0.3.0
-	github.com/goal-web/contracts v0.3.0
-	github.com/goal-web/pipeline v0.3.0
-	github.com/goal-web/routing v0.3.0
-	github.com/goal-web/supports v0.3.0
 	github.com/pkg/errors v0.9.1
 	github.com/valyala/fasthttp v1.51.0
 )
