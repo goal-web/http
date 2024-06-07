@@ -47,7 +47,6 @@ func New(path string, controller contracts.SseController) (string, any) {
 			defer func() {
 				controller.OnClose(fd)
 				close(messageChan)
-				close(closeChan)
 				closeChan = nil
 				messageChan = nil
 				ticker.Stop()

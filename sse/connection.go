@@ -25,6 +25,7 @@ func (conn *Connection) Fd() uint64 {
 
 func (conn *Connection) Close() error {
 	conn.closePipe <- true
+	close(conn.closePipe)
 	return nil
 }
 
