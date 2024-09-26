@@ -29,9 +29,6 @@ func (provider *ServiceProvider) Stop() {
 }
 
 func (provider *ServiceProvider) Start() error {
-	for _, collector := range provider.RouteCollectors {
-		provider.app.Call(collector)
-	}
 
 	var err error
 	provider.app.Call(func(
@@ -50,6 +47,8 @@ func (provider *ServiceProvider) Start() error {
 		if err != nil {
 			return
 		}
+
+		router.Print()
 
 		err = engine.Start(
 			utils.StringOr(
@@ -78,4 +77,8 @@ func (provider *ServiceProvider) Register(app contracts.Application) {
 		httpConfig := config.Get("http").(Config)
 		return NewEngine(provider.app, router, append(routing.ConvertToMiddlewares(httpConfig.GlobalMiddlewares...), router.Middlewares()...))
 	})
+
+	for _, collector := range provider.RouteCollectors {
+		provider.app.Call(collector)
+	}
 }
