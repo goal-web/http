@@ -49,13 +49,13 @@ func (provider *ServiceProvider) Start() error {
 		}
 
 		router.Print()
-
-		err = engine.Start(
-			utils.StringOr(
-				httpConfig.Address,
-				fmt.Sprintf("%s:%s", httpConfig.Host, utils.StringOr(httpConfig.Port, "8000")),
-			),
+		address := utils.StringOr(
+			httpConfig.Address,
+			fmt.Sprintf("%s:%s", httpConfig.Host, utils.StringOr(httpConfig.Port, "8000")),
 		)
+		fmt.Println("http service is started.")
+		fmt.Println(address)
+		err = engine.Start(address)
 	})
 
 	if err != nil && !errors.Is(err, http.ErrServerClosed) {
@@ -70,12 +70,18 @@ func (provider *ServiceProvider) Start() error {
 func (provider *ServiceProvider) Register(app contracts.Application) {
 	provider.app = app
 
+	app.Singleton("HttpMiddleware", func() contracts.Middleware {
+		return NewMiddleware(provider.app)
+	})
 	app.Singleton("HttpRouter", func() contracts.HttpRouter {
 		return routing.NewHttpRouter(provider.app)
 	})
-	app.Singleton("HttpEngine", func(router contracts.HttpRouter, config contracts.Config) contracts.HttpEngine {
+	app.Singleton("HttpEngine", func(router contracts.HttpRouter, config contracts.Config, middleware contracts.Middleware) contracts.HttpEngine {
 		httpConfig := config.Get("http").(Config)
-		return NewEngine(provider.app, router, append(routing.ConvertToMiddlewares(httpConfig.GlobalMiddlewares...), router.Middlewares()...))
+		return NewEngine(provider.app, router, append(routing.ConvertToMiddlewares(middleware, httpConfig.GlobalMiddlewares...), router.Middlewares()...))
+	})
+	app.Call(func(console contracts.Console) {
+		console.RegisterCommand(routing.NewRouteList)
 	})
 
 	for _, collector := range provider.RouteCollectors {

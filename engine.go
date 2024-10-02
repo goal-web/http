@@ -27,11 +27,6 @@ func NewEngine(app contracts.Application, router contracts.HttpRouter, middlewar
 	}
 }
 
-func (e *Engine) Request() contracts.HttpRequest {
-	//TODO implement me
-	panic("implement me")
-}
-
 var (
 	NotFoundResponse       = NewStringResponse(routing.NotFoundErr.Error(), 404)
 	MethodNotAllowResponse = NewStringResponse(routing.MethodNotAllowErr.Error(), 405)

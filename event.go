@@ -3,6 +3,6 @@ package http
 type ServeClosed struct {
 }
 
-func (this *ServeClosed) Event() string {
+func (c *ServeClosed) Event() string {
 	return "HTTP_SERVE_CLOSED"
 }

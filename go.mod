@@ -1,6 +1,6 @@
 module github.com/goal-web/http
 
-go 1.20
+go 1.23.1
 
 require (
 	github.com/fasthttp/websocket v1.5.7
