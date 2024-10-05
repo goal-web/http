@@ -17,7 +17,7 @@ func New(path string, controller contracts.SseController) (string, any) {
 		sse := sseFactory.Sse(path)
 		var fd = sse.GetFd()
 		if err := controller.OnConnect(request, fd); err != nil {
-			logs.WithError(err).WithFields(request.Fields()).WithField("fd", fd).Debug("sse.NewRouter: OnConnect failed")
+			logs.WithError(err).WithFields(request.ToFields()).WithField("fd", fd).Debug("sse.NewRouter: OnConnect failed")
 			return nil
 		}
 		httpConfig := config.Get("http").(http.Config)

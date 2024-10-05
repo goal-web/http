@@ -251,7 +251,7 @@ func (req *Request) Optional(key string, defaultValue any) any {
 	return defaultValue
 }
 
-func (req *Request) Fields() contracts.Fields {
+func (req *Request) ToFields() contracts.Fields {
 	return req.fields
 }
 
