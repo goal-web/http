@@ -99,7 +99,11 @@ func (req *Request) Path() string {
 }
 
 func (req *Request) Parse(data any) error {
-	return json.Unmarshal(req.Request.PostBody(), data)
+	fieldsBytes, err := json.Marshal(req.fields)
+	if err != nil {
+		return err
+	}
+	return json.Unmarshal(fieldsBytes, data)
 }
 
 func (req *Request) Param(name string) string {
