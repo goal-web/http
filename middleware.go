@@ -53,7 +53,7 @@ type MiddlewareDuplicateException struct {
 
 func (m *Middleware) Call(name string, params ...any) any {
 	if middleware, exists := m.middlewares[name]; exists {
-		return m.container.StaticCall(middleware, params...)
+		return m.container.StaticCall(middleware, params...)[0]
 	}
 
 	panic(MiddlewareNotFoundException{
