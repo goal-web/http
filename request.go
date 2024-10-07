@@ -2,6 +2,7 @@ package http
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/goal-web/contracts"
 	"github.com/goal-web/supports"
 	"github.com/goal-web/supports/utils"
@@ -208,6 +209,10 @@ func (req *Request) parseFields() {
 		req.initialed = true
 		req.lock.Unlock()
 	}()
+
+	for key, value := range req.params {
+		req.fields[fmt.Sprintf("$%s", key)] = value
+	}
 
 	for key, value := range req.QueryParams() {
 		if len(value) == 1 {
