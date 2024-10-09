@@ -34,7 +34,7 @@ func NewRequest(req *fasthttp.RequestCtx, params contracts.RouteParams) contract
 		context:    make(contracts.Fields),
 		fields:     make(contracts.Fields),
 	}
-	request.BaseFields.FieldsProvider = request
+	request.BaseFields.Provider = request
 	request.BaseFields.OptionalGetter = request.Optional
 
 	request.parseFields()
