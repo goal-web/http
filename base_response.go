@@ -7,6 +7,13 @@ type BaseResponse struct {
 	headers http.Header
 }
 
+func NewBaseResponse(status int, headers http.Header) *BaseResponse {
+	return &BaseResponse{
+		status:  status,
+		headers: headers,
+	}
+}
+
 func (base *BaseResponse) Status() int {
 	return base.status
 }
