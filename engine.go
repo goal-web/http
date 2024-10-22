@@ -118,15 +118,16 @@ func (e *Engine) handleResponse(response contracts.HttpResponse, ctx *fasthttp.R
 }
 
 func (e *Engine) Start(address string) error {
-	e.server = &fasthttp.Server{
-		Handler: e.HandleFastHTTP,
-	}
+	e.server = &fasthttp.Server{Handler: e.HandleFastHTTP}
 
 	return e.server.ListenAndServe(address)
 }
 
 func (e *Engine) Close() error {
-	return e.server.Shutdown()
+	if e.server != nil {
+		return e.server.Shutdown()
+	}
+	return nil
 }
 
 func (e *Engine) Static(prefix, directory string) {
