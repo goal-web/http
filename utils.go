@@ -29,7 +29,7 @@ func ParseRequestParams(ctx *fasthttp.RequestCtx, dest interface{}) error {
 	switch {
 	case strings.Contains(contentType, "application/json"):
 		bodyBytes := ctx.PostBody()
-		if bodyBytes != nil {
+		if len(bodyBytes) > 0 {
 			if err := json.Unmarshal(bodyBytes, dest); err != nil {
 				return fmt.Errorf("failed to parse JSON: %w", err)
 			}
