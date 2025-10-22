@@ -3,15 +3,16 @@ package http
 import (
 	"errors"
 	"fmt"
+	"net/url"
+	"path/filepath"
+	"strings"
+
 	"github.com/goal-web/container"
 	"github.com/goal-web/contracts"
 	"github.com/goal-web/pipeline"
 	"github.com/goal-web/routing"
 	"github.com/goal-web/supports/utils"
 	"github.com/valyala/fasthttp"
-	"net/url"
-	"path/filepath"
-	"strings"
 )
 
 type Engine struct {
