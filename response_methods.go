@@ -614,19 +614,6 @@ func Text(text string, code ...int) contracts.HttpResponse {
 	return Plain(text, code...)
 }
 
-// Json 创建一个JSON响应
-// 参数:
-//   - data: 要序列化的数据
-//   - code: HTTP状态码（可选，默认200）
-func Json(data interface{}, code ...int) contracts.HttpResponse {
-	status := 200
-	if len(code) > 0 {
-		status = code[0]
-	}
-
-	return NewJsonResponse(data, status)
-}
-
 // HtmlResponse HTML响应结构体
 type HtmlResponse struct {
 	*BaseResponse

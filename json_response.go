@@ -17,10 +17,10 @@ func NewJsonResponse(data any, code ...int) contracts.HttpResponse {
 	if len(code) > 0 {
 		status = code[0]
 	}
-	
+
 	headers := make(http.Header)
 	headers.Set("Content-Type", "application/json; charset=utf-8")
-	
+
 	return &JsonResponse{
 		content:      data,
 		BaseResponse: NewBaseResponse(status, headers),
@@ -57,4 +57,12 @@ func (s *JsonResponse) Cookie(name, value string, maxAge int, args ...interface{
 func (s *JsonResponse) WithoutCookie(name string, args ...interface{}) contracts.HttpResponse {
 	s.BaseResponse.WithoutCookie(name, args...)
 	return s
+}
+
+// Json 创建JSON响应的简化方法
+// 参数:
+//   - data: 要序列化的数据
+//   - code: HTTP状态码（可选，默认200）
+func Json(data interface{}, code ...int) contracts.HttpResponse {
+	return NewJsonResponse(data, code...)
 }
