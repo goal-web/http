@@ -2,12 +2,13 @@ package http
 
 import (
 	"fmt"
+	"net/http"
+
 	"github.com/goal-web/contracts"
 	"github.com/goal-web/routing"
 	"github.com/goal-web/supports/logs"
 	"github.com/goal-web/supports/utils"
 	"github.com/pkg/errors"
-	"net/http"
 )
 
 type ServiceProvider struct {
@@ -78,7 +79,7 @@ func (provider *ServiceProvider) Register(app contracts.Application) {
 	})
 	app.Singleton("HttpEngine", func(router contracts.HttpRouter, config contracts.Config, middleware contracts.Middleware) contracts.HttpEngine {
 		httpConfig := config.Get("http").(Config)
-		return NewEngine(provider.app, router, append(routing.ConvertToMiddlewares(middleware, httpConfig.GlobalMiddlewares...), router.Middlewares()...))
+		return NewEngine(provider.app, router, append(routing.ConvertToMiddlewares(middleware, httpConfig.GlobalMiddlewares...), router.Middlewares()...), httpConfig)
 	})
 	app.Call(func(console contracts.Console) {
 		console.RegisterCommand(routing.NewRouteList)

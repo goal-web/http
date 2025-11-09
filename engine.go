@@ -20,15 +20,17 @@ type Engine struct {
 	router      contracts.HttpRouter
 	app         contracts.Application
 	server      *fasthttp.Server
+	config      Config
 
 	staticDirectories map[string]string
 }
 
-func NewEngine(app contracts.Application, router contracts.HttpRouter, middlewares []contracts.MagicalFunc) contracts.HttpEngine {
+func NewEngine(app contracts.Application, router contracts.HttpRouter, middlewares []contracts.MagicalFunc, config Config) contracts.HttpEngine {
 	return &Engine{
 		router:      router,
 		app:         app,
 		middlewares: middlewares,
+		config:      config,
 
 		staticDirectories: make(map[string]string),
 	}
@@ -119,7 +121,10 @@ func (e *Engine) handleResponse(response contracts.HttpResponse, ctx *fasthttp.R
 }
 
 func (e *Engine) Start(address string) error {
-	e.server = &fasthttp.Server{Handler: e.HandleFastHTTP}
+	e.server = &fasthttp.Server{
+		Handler:            e.HandleFastHTTP,
+		MaxRequestBodySize: e.config.MaxRequestBodySize,
+	}
 
 	return e.server.ListenAndServe(address)
 }
